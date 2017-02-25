@@ -3,7 +3,7 @@ package me.disper.java8.functional;
 @FunctionalInterface
 public interface MyFunctionalInterface
 {
-	String DEFAULT_MESSAGE = "default method";
+	String DEFAULT_MESSAGE = "default message";
 
 	void abstractMessagePrint();
 
@@ -14,6 +14,5 @@ public interface MyFunctionalInterface
 	default void printDefaultMessage()
 	{
 		System.out.println(DEFAULT_MESSAGE);
-		;
 	}
 }
