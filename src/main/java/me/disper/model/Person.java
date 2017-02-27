@@ -6,8 +6,13 @@ public class Person {
 	private int age;
 
 	public Person(final String name, final String surname) {
+		this(name, surname, 0);
+	}
+
+	public Person(final String name, final String surname, final int age) {
 		this.name = name;
 		this.surname = surname;
+		this.age = age;
 	}
 
 	public String getName() {
@@ -32,5 +37,14 @@ public class Person {
 
 	public void setAge(final int age) {
 		this.age = age;
+	}
+
+	@Override
+	public String toString() {
+		return "Person{" +
+				"name='" + name + '\'' +
+				", surname='" + surname + '\'' +
+				", age=" + age +
+				'}';
 	}
 }
