@@ -5,10 +5,15 @@ import me.disper.model.Person;
 import org.assertj.core.data.Percentage;
 import org.junit.Test;
 
+import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.reducing;
+import static java.util.stream.Collectors.summarizingInt;
+import static java.util.stream.Collectors.summingInt;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
@@ -55,5 +60,47 @@ public class CommonCollectorsTest
 
 		assertThat(person.isPresent()).isTrue();
 		assertThat(person.get().getAge()).isSameAs(NUMBER_OF_PEOPLE);
+	}
+
+	@Test
+	public void shouldReturnTotalAges()
+	{
+		//when
+		final int totalAgesReducing = people.stream().collect(reducing(0, Person::getAge, (a, b) -> a + b));
+		final int totalAgesSummingInt = people.stream().collect(summingInt(Person::getAge));
+		final int totalAgesReduce = people.stream().map(Person::getAge).reduce(0, (a, b) -> a + b);
+		final int totalAgesMapToInt = people.stream().mapToInt(Person::getAge).sum();
+
+		//then
+		assertThat(totalAgesReducing)
+				.isEqualTo(totalAgesSummingInt)
+				.isEqualTo(totalAgesReduce)
+				.isEqualTo(totalAgesMapToInt)
+				.isEqualTo(55);
+	}
+
+	@Test
+	public void shouldCreateIntSummaryStatistics()
+	{
+		//when
+		IntSummaryStatistics statistics = people.stream().collect(summarizingInt(Person::getAge));
+
+		//then
+		assertThat(statistics.getAverage()).isEqualTo(5.5);
+		assertThat(statistics.getCount()).isEqualTo(NUMBER_OF_PEOPLE.intValue());
+		assertThat(statistics.getMax()).isEqualTo(NUMBER_OF_PEOPLE);
+		assertThat(statistics.getMin()).isEqualTo(1);
+		assertThat(statistics.getSum()).isEqualTo(55);
+	}
+
+	@Test
+	public void shouldJoinStrings()
+	{
+		//when
+		final String allNames = people.stream().map(Person::getName).collect(joining(", "));
+
+		//then
+		assertThat(allNames).contains("John1, ");
+		assertThat(allNames).contains("John10");
 	}
 }
