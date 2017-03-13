@@ -21,11 +21,12 @@ public class PeopleGenerator
 	public static List<Person> generate(int numberOfPeople)
 	{
 		List<Person> people = new ArrayList<>();
-		for (int i = STARTING_AGE; i <= numberOfPeople; i++)
+		for (int currentAge = STARTING_AGE; currentAge <= numberOfPeople; currentAge++)
 		{
-			final String name = EXAMPLE_NAME.concat(String.valueOf(i));
-			final String surname = EXAMPLE_SURNAME.concat(String.valueOf(i));
-			people.add(new Person(name, surname, i));
+			final String name = EXAMPLE_NAME.concat(String.valueOf(currentAge));
+			final String surname = EXAMPLE_SURNAME.concat(String.valueOf(currentAge));
+			final Person.Gender gender = (currentAge % 2 == 0) ? Person.Gender.FEMALE : Person.Gender.MALE;
+			people.add(new Person(name, surname, currentAge, gender));
 		}
 		return people;
 	}

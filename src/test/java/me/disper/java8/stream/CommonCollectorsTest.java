@@ -7,9 +7,12 @@ import org.junit.Test;
 
 import java.util.IntSummaryStatistics;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.summarizingInt;
@@ -103,4 +106,23 @@ public class CommonCollectorsTest
 		assertThat(allNames).contains("John1, ");
 		assertThat(allNames).contains("John10");
 	}
+
+	@Test
+	public void shouldGroupByGender()
+	{
+		//when
+		//TODO: why it isn't working?
+//		Map<Person.Gender, Person> groupByGender = people.stream()
+//				.collect(groupingBy(o -> ((Person) o).getGender()));
+//				.collect(groupingBy(Person::getGender));
+
+		Map<Person.Gender, Long> countByGender = people.stream()
+				.collect(groupingBy(Person::getGender, counting()));
+
+		System.out.println(countByGender);
+
+		//then
+	}
+
+	//TODO: Collectors.collectingAndThen
 }
