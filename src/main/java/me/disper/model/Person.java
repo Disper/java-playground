@@ -4,7 +4,7 @@ public class Person {
 	private String name;
 	private String surname;
 	private int age;
-	private static Gender gender;
+	private Gender gender;
 
 	public Person(final String name, final String surname) {
 		this(name, surname, 0);

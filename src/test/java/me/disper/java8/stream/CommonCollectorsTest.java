@@ -1,23 +1,27 @@
 package me.disper.java8.stream;
 
-import me.disper.data.PeopleGenerator;
-import me.disper.model.Person;
-import org.assertj.core.data.Percentage;
-import org.junit.Test;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.maxBy;
+import static java.util.stream.Collectors.reducing;
+import static java.util.stream.Collectors.summarizingInt;
+import static java.util.stream.Collectors.summingInt;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Comparator;
 import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.reducing;
-import static java.util.stream.Collectors.summarizingInt;
-import static java.util.stream.Collectors.summingInt;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.data.Percentage;
+import org.junit.Test;
+
+import me.disper.data.PeopleGenerator;
+import me.disper.model.Person;
 
 
 public class CommonCollectorsTest
@@ -34,8 +38,7 @@ public class CommonCollectorsTest
 		Long sumUsingSize = (long) people.size();
 
 		// then
-		assertThat(NUMBER_OF_PEOPLE)
-				.isCloseTo(Math.toIntExact(sumUsingCounting), Percentage.withPercentage(0))
+		assertThat(NUMBER_OF_PEOPLE).isCloseTo(Math.toIntExact(sumUsingCounting), Percentage.withPercentage(0))
 				.isCloseTo(Math.toIntExact(sumUsingCount), Percentage.withPercentage(0))
 				.isCloseTo(Math.toIntExact(sumUsingSize), Percentage.withPercentage(0));
 	}
@@ -44,10 +47,7 @@ public class CommonCollectorsTest
 	public void shouldReturnOldestAge()
 	{
 		//when
-		Integer oldestAge = people.stream()
-				.map(Person::getAge)
-				.max(Integer::compare)
-				.orElse(0);
+		Integer oldestAge = people.stream().map(Person::getAge).max(Integer::compare).orElse(0);
 
 		//then
 		assertThat(oldestAge).isEqualTo(NUMBER_OF_PEOPLE);
@@ -75,10 +75,7 @@ public class CommonCollectorsTest
 		final int totalAgesMapToInt = people.stream().mapToInt(Person::getAge).sum();
 
 		//then
-		assertThat(totalAgesReducing)
-				.isEqualTo(totalAgesSummingInt)
-				.isEqualTo(totalAgesReduce)
-				.isEqualTo(totalAgesMapToInt)
+		assertThat(totalAgesReducing).isEqualTo(totalAgesSummingInt).isEqualTo(totalAgesReduce).isEqualTo(totalAgesMapToInt)
 				.isEqualTo(55);
 	}
 
@@ -97,7 +94,7 @@ public class CommonCollectorsTest
 	}
 
 	@Test
-	public void shouldJoinStrings()
+	public void shouldJoinStringsUsingJoining()
 	{
 		//when
 		final String allNames = people.stream().map(Person::getName).collect(joining(", "));
@@ -108,21 +105,59 @@ public class CommonCollectorsTest
 	}
 
 	@Test
-	public void shouldGroupByGender()
+	public void shouldJoinStringsUsingReduce()
 	{
 		//when
-		//TODO: why it isn't working?
-//		Map<Person.Gender, Person> groupByGender = people.stream()
-//				.collect(groupingBy(o -> ((Person) o).getGender()));
-//				.collect(groupingBy(Person::getGender));
-
-		Map<Person.Gender, Long> countByGender = people.stream()
-				.collect(groupingBy(Person::getGender, counting()));
-
-		System.out.println(countByGender);
+		final String allNames = people.stream().map(Person::getName).reduce("", (n1, n2) -> n1.concat(", ").concat(n2));
 
 		//then
+		assertThat(allNames).contains("John1, ");
+		assertThat(allNames).contains("John10");
 	}
 
-	//TODO: Collectors.collectingAndThen
+	@Test
+	public void shouldGroupByGender()
+	{
+		final int halfOfThePeople = NUMBER_OF_PEOPLE / 2;
+		//when
+		Map<Person.Gender, List<Person>> groupByGender = people.stream().collect(groupingBy(Person::getGender));
+
+		Map<Person.Gender, Long> countByGender = people.stream().collect(groupingBy(Person::getGender, counting()));
+
+		//then
+		assertThat(groupByGender.get(Person.Gender.MALE)).size().isEqualTo(halfOfThePeople);
+		assertThat(groupByGender.get(Person.Gender.FEMALE)).size().isEqualTo(halfOfThePeople);
+
+		assertThat(countByGender.get(Person.Gender.MALE)).isEqualTo(halfOfThePeople);
+		assertThat(countByGender.get(Person.Gender.FEMALE)).isEqualTo(halfOfThePeople);
+	}
+
+	@Test
+	public void shouldGroupOldestByGender()
+	{
+		Map<Person.Gender, Person> groupByGender = people.stream()
+				.collect(groupingBy(Person::getGender, collectingAndThen(
+							maxBy(Comparator.comparingInt(Person::getAge)),
+							Optional::get
+						)
+				));
+
+		assertThat(groupByGender.get(Person.Gender.FEMALE)).isInstanceOf(Person.class);
+		assertThat(groupByGender.get(Person.Gender.FEMALE).getAge()).isEqualTo(NUMBER_OF_PEOPLE);
+		assertThat(groupByGender.get(Person.Gender.MALE).getAge()).isEqualTo(NUMBER_OF_PEOPLE - 1);
+	}
+
+	@Test
+	public void shouldGroupMaxAgeByGender()
+	{
+		Map<Person.Gender, Integer> groupByGender = people.stream()
+				.collect(groupingBy(Person::getGender, collectingAndThen(
+						maxBy(Comparator.comparingInt(Person::getAge)),
+						person -> person.get().getAge()
+						)
+				));
+
+		assertThat(groupByGender.get(Person.Gender.FEMALE)).isEqualTo(NUMBER_OF_PEOPLE);
+		assertThat(groupByGender.get(Person.Gender.MALE)).isEqualTo(NUMBER_OF_PEOPLE - 1);
+	}
 }
